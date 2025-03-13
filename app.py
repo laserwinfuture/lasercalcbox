@@ -82,6 +82,18 @@ if page == '激光功率计算':
         
     # 脉冲宽度设置
     col_pw1, col_pw2 = st.columns([5, 1])
+
+    # 或者使用CSS自定义样式:强制在一行显示
+    st.markdown("""
+    <style>
+        .css-1lcbmhc {
+            display: flex;
+            flex-direction: row;
+            justify-content: space-between;
+        }
+    </style>
+    """, unsafe_allow_html=True)
+
     with col_pw1:
         pw_value = st.number_input('脉冲宽度', value=1.0, format='%f')
     with col_pw2:
