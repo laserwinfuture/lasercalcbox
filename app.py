@@ -67,7 +67,7 @@ if page == '激光功率计算':
     st.subheader('基本参数设置')
     
     # PRF设置
-    col_prf1, col_prf2 = st.columns([2, 1])
+    col_prf1, col_prf2 = st.columns([5, 1])
     with col_prf1:
         prf_value = st.number_input('重复频率', value=1.0, format='%f')
     with col_prf2:
