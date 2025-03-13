@@ -81,7 +81,7 @@ if page == '激光功率计算':
         st.session_state.PRF = prf_value * 1e6
         
     # 脉冲宽度设置
-    col_pw1, col_pw2 = st.columns([2, 1])
+    col_pw1, col_pw2 = st.columns([5, 1])
     with col_pw1:
         pw_value = st.number_input('脉冲宽度', value=1.0, format='%f')
     with col_pw2:
@@ -103,7 +103,7 @@ if page == '激光功率计算':
     st.subheader('能量-功率转换')
     
     # 能量设置
-    col_e1, col_e2 = st.columns([2, 1])
+    col_e1, col_e2 = st.columns([5, 1])
     with col_e2:
         energy_unit = st.selectbox('  ', ['nJ', 'μJ', 'mJ'], index=2)
     with col_e1:
@@ -125,7 +125,7 @@ if page == '激光功率计算':
         )
     
     # 功率显示
-    col_p1, col_p2 = st.columns([2, 1])
+    col_p1, col_p2 = st.columns([5, 1])
     with col_p2:
         power_unit = st.selectbox('   ', ['W', 'mW'], index=0)
     with col_p1:
