@@ -9,7 +9,33 @@ st.set_page_config(
     layout='centered'
 )
 
-st.title('')
+st.markdown("""
+    <style>
+    .stHorizontalBlock > div {
+        flex-shrink: 0;
+        min-width: auto !important;
+    }
+    div[data-testid="stFormSubmitButton"] > button {
+        width: auto;
+    }
+    div.row-widget.stNumberInput > div {
+        display: inline-flex !important;
+        align-items: center !important;
+        width: 100% !important;
+    }
+    div.row-widget.stNumberInput > div > label {
+        margin: 0 !important;
+        min-width: 120px !important;
+        padding-right: 10px !important;
+        white-space: nowrap !important;
+        flex: 0 0 auto !important;
+    }
+    div.row-widget.stNumberInput > div > div {
+        flex: 1 1 auto !important;
+        min-width: 0 !important;
+    }
+    </style>
+    """, unsafe_allow_html=True)
 
 
 def update_energy_state(value, unit):
@@ -51,9 +77,17 @@ if 'power' not in st.session_state:
     st.session_state.power = st.session_state.energy * st.session_state.PRF
 
 # 创建侧边栏导航
-st.sidebar.subheader('激光计算工具箱')
+st.sidebar.subheader('激光计算工具箱V0.1')
 laser_power_button = st.sidebar.button('激光功率计算')
 beam_quality_button = st.sidebar.button('光束质量计算')
+
+# 添加空白占位，将文字推到底部
+st.sidebar.markdown('---')
+for _ in range(20):
+    st.sidebar.write('')
+
+# 在底部添加文字
+st.sidebar.markdown('by Dr.shi  \n 13810392543')
 
 if laser_power_button:
     st.session_state.page = '激光功率计算'
@@ -64,14 +98,6 @@ if st.session_state.page == '激光功率计算':
     st.subheader('基本参数设置')
     
     # PRF设置
-    st.markdown("""
-        <style>
-        .stHorizontalBlock > div {
-            flex-shrink: 0;
-            min-width: auto !important;
-        }
-        </style>
-        """, unsafe_allow_html=True)
     col_prf1, col_prf2 = st.columns([3, 1])
     with col_prf1:
         prf_value = st.number_input('重复频率', value=1.0, format='%f')
