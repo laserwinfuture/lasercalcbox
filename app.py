@@ -35,6 +35,8 @@ def update_power_state(value, unit):
 
 
 # 初始化session state
+if 'page' not in st.session_state:
+    st.session_state.page = '激光功率计算'  # 默认页面
 if 'PRF' not in st.session_state:
     st.session_state.PRF = 1000  # 默认1kHz
 if 'PW' not in st.session_state:
@@ -49,25 +51,28 @@ if 'power' not in st.session_state:
     st.session_state.power = st.session_state.energy * st.session_state.PRF
 
 # 创建侧边栏导航
-#page = st.sidebar.radio('导航', ['激光功率计算', '光束质量计算'])
-
-# 创建侧边栏导航
 st.sidebar.subheader('激光计算工具箱')
 laser_power_button = st.sidebar.button('激光功率计算')
 beam_quality_button = st.sidebar.button('光束质量计算')
 
 if laser_power_button:
-    page = '激光功率计算'
+    st.session_state.page = '激光功率计算'
 elif beam_quality_button:
-    page = '光束质量计算'
-else:
-    page = '激光功率计算'  # 默认页面
+    st.session_state.page = '光束质量计算'
 
-if page == '激光功率计算':
+if st.session_state.page == '激光功率计算':
     st.subheader('基本参数设置')
     
     # PRF设置
     with st.container():
+        st.markdown("""
+            <style>
+            .stHorizontalBlock > div {
+                flex-shrink: 0;
+                min-width: auto !important;
+            }
+            </style>
+            """, unsafe_allow_html=True)
         col_prf1, col_prf2 = st.columns([5, 1])
         with col_prf1:
             prf_value = st.number_input('重复频率', value=1.0, format='%f')
@@ -189,7 +194,7 @@ if page == '激光功率计算':
     else:
         st.error(f'能量密度超过损伤阈值 ({energy_density/damage_threshold*100:.1f}% 损伤阈值)')
 
-elif page == '光束质量计算':
+elif st.session_state.page == '光束质量计算':
     st.subheader('光束质量计算')
     # 基本参数输入
     wavelength = st.number_input('波长(nm)', value=1064)
