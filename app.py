@@ -67,33 +67,23 @@ if page == '激光功率计算':
     st.subheader('基本参数设置')
     
     # PRF设置
-    col_prf1, col_prf2 = st.columns([5, 1])
-    with col_prf1:
-        prf_value = st.number_input('重复频率', value=1.0, format='%f')
-    with col_prf2:
-        prf_unit = st.selectbox('', ['Hz', 'kHz', 'MHz'], index=1)
-    
-    if prf_unit == 'Hz':
-        st.session_state.PRF = prf_value
-    elif prf_unit == 'kHz':
-        st.session_state.PRF = prf_value * 1e3
-    else:  # MHz
-        st.session_state.PRF = prf_value * 1e6
+    with st.container():
+        col_prf1, col_prf2 = st.columns([5, 1])
+        with col_prf1:
+            prf_value = st.number_input('重复频率', value=1.0, format='%f')
+        with col_prf2:
+            prf_unit = st.selectbox('', ['Hz', 'kHz', 'MHz'], index=1)
         
+        if prf_unit == 'Hz':
+            st.session_state.PRF = prf_value
+        elif prf_unit == 'kHz':
+            st.session_state.PRF = prf_value * 1e3
+        else:  # MHz
+            st.session_state.PRF = prf_value * 1e6
+        
+
     # 脉冲宽度设置
     col_pw1, col_pw2 = st.columns([5, 1])
-
-    # 或者使用CSS自定义样式:强制在一行显示
-    st.markdown("""
-    <style>
-        .css-1lcbmhc {
-            display: flex;
-            flex-direction: row;
-            justify-content: space-between;
-        }
-    </style>
-    """, unsafe_allow_html=True)
-
     with col_pw1:
         pw_value = st.number_input('脉冲宽度', value=1.0, format='%f')
     with col_pw2:
