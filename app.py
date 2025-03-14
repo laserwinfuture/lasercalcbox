@@ -12,6 +12,19 @@ st.set_page_config(
     layout='centered'
 )
 
+# 加载Google Analytics追踪代码
+st.markdown("""
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-ECG995SJ8C"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-ECG995SJ8C');
+    </script>
+    """, unsafe_allow_html=True)
+
 # 加载自定义CSS样式
 st.markdown("""
     <style>
