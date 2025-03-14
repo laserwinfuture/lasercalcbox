@@ -1,9 +1,10 @@
-import streamlit as st
 import math
 import numpy as np
+import streamlit as st
+import sys
+
+sys.path.append("./lib_")  
 import lensTransfer
-
-
 
 # 设置页面配置
 st.set_page_config(
@@ -11,19 +12,6 @@ st.set_page_config(
     page_icon='logo/ICO.ico',
     layout='centered'
 )
-
-# 加载Google Analytics追踪代码
-st.markdown("""
-    <!-- Google tag (gtag.js) -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-ECG995SJ8C"></script>
-    <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
-
-      gtag('config', 'G-ECG995SJ8C');
-    </script>
-    """, unsafe_allow_html=True)
 
 # 加载自定义CSS样式
 st.markdown("""
@@ -271,5 +259,3 @@ elif st.session_state.page == '光束质量计算':
     st.write(f'束腰位置 = {z0_after:.2f} mm')
     st.write(f'发散角 = {theta0_after*1000:.2f} mrad')
     st.write(f'瑞利长度 = {zr_after*0.001:.2f} mm')
-
-
