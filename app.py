@@ -3,12 +3,28 @@ import math
 import numpy as np
 import lensTransfer
 
+# 添加 Google Analytics 脚本（替换 YOUR_TRACKING_ID）
+google_analytics_script = """
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-ECG995SJ8C"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-ECG995SJ8C');
+</script>
+"""
+st.components.v1.html(google_analytics_script, height=0)  # height=0 隐藏组件
+
+
+# 设置页面配置
 st.set_page_config(
     page_title='Laser Calc Box',
     page_icon='logo/ICO.ico',
     layout='centered'
 )
 
+# 加载自定义CSS样式
 st.markdown("""
     <style>
     .stHorizontalBlock > div {
@@ -132,7 +148,7 @@ if st.session_state.page == '激光功率计算':
     # 损伤阈值设置
     st.session_state.damage = st.number_input('损伤阈值(J/cm²@10ns)', value=5.0)
     
-    st.subheader('能量-功率转换')
+    st.subheader('能量/功率(任输其一)')
     
     # 能量设置
     col_e1, col_e2 = st.columns([3, 1])
@@ -187,19 +203,19 @@ if st.session_state.page == '激光功率计算':
     
     # 平均功率密度
     avg_power_density = st.session_state.power / area
-    st.write(f'平均功率密度: {avg_power_density:.4f} W/cm² = {avg_power_density*0.001:.4f} kW/cm²')
+    st.write(f'平均功率密度: {avg_power_density:.2f} W/cm² = {avg_power_density*0.001:.2f} kW/cm²')
     
     # 峰值功率
     peak_power = st.session_state.energy / st.session_state.PW
-    st.write(f'峰值功率: {peak_power*1e-3:.4f} kW = {peak_power*1e-6:.4f} MW = {peak_power*1e-9:.4f} GW')
+    st.write(f'峰值功率: {peak_power*1e-3:.2f} kW = {peak_power*1e-6:.2f} MW = {peak_power*1e-9:.2f} GW')
     
     # 能量密度
     energy_density = st.session_state.energy / area
-    st.write(f'能量密度: {energy_density*1e6:.4f} μJ/cm² = {energy_density*1e3:.4f} mJ/cm² = {energy_density:.4f} J/cm²')
+    st.write(f'能量密度: {energy_density*1e6:.2f} μJ/cm² = {energy_density*1e3:.2f} mJ/cm² = {energy_density:.2f} J/cm²')
     
     # 峰值功率密度
     peak_power_density = peak_power / area
-    st.write(f'峰值功率密度: {peak_power_density*1e-3:.4f} kW/cm² = {peak_power_density*1e-6:.4f} MW/cm² = {peak_power_density*1e-9:.4f} GW/cm²')
+    st.write(f'峰值功率密度: {peak_power_density*1e-3:.2f} kW/cm² = {peak_power_density*1e-6:.2f} MW/cm² = {peak_power_density*1e-9:.2f} GW/cm²')
     
     # 脉宽系数
     pw_factor = math.sqrt(10 / (st.session_state.PW * 1e9))
@@ -207,7 +223,7 @@ if st.session_state.page == '激光功率计算':
     
     # 损伤阈值
     damage_threshold = st.session_state.damage / pw_factor
-    st.write(f'损伤阈值(考虑脉宽): {damage_threshold:.4f} J/cm²')
+    st.write(f'损伤阈值(考虑脉宽): {damage_threshold:.2f} J/cm²')
     
     # 能量密度与损伤阈值比较的颜色显示
     if energy_density <= damage_threshold * 0.5:
