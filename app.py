@@ -3,18 +3,6 @@ import math
 import numpy as np
 import lensTransfer
 
-# 添加 Google Analytics 脚本（替换 YOUR_TRACKING_ID）
-google_analytics_script = """
-<!-- Global site tag (gtag.js) - Google Analytics -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-ECG995SJ8C"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-  gtag('config', 'G-ECG995SJ8C');
-</script>
-"""
-st.components.v1.html(google_analytics_script, height=0)  # height=0 隐藏组件
 
 
 # 设置页面配置
@@ -52,6 +40,19 @@ st.markdown("""
     }
     </style>
     """, unsafe_allow_html=True)
+
+# Google Analytics 脚本
+google_analytics_script = """
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-ECG995SJ8C"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-ECG995SJ8C');
+</script>
+"""
+st.components.v1.html(google_analytics_script, height=0)  # height=0 隐藏组件
 
 
 def update_energy_state(value, unit):
