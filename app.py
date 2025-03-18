@@ -120,7 +120,7 @@ if st.session_state.page == '激光功率计算':
     # 脉冲宽度设置
     col_pw1, col_pw2 = st.columns([3, 1])
     with col_pw1:
-        pw_value = st.number_input('脉冲宽度', value=1.0, format='%f')
+        pw_value = st.number_input('脉冲宽度', value=1.0, step=1.0, format='%f')
     with col_pw2:
         pw_unit = st.selectbox(' ', ['ps', 'ns', 'us'], index=1)
     
