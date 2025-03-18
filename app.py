@@ -3,8 +3,11 @@ import numpy as np
 import streamlit as st
 import sys
 
-sys.path.append("./lib_")  
-import lensTransfer
+# sys.path.append("./lib_")  
+# import lensTransfer
+
+import lib_.lensTransfer
+
 
 # 设置页面配置
 st.set_page_config(
