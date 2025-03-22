@@ -13,8 +13,8 @@ libpath = os.path.join(current_path, 'mylib')
 sys.path.append(libpath)
 print(libpath)
 
-import lensTransfer
-import api
+from libpath import lensTransfer
+from libpath import api
 
 
 # 设置页面配置
