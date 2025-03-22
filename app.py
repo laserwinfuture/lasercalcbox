@@ -3,15 +3,14 @@ import numpy as np
 import streamlit as st
 import sys
 import os
-# sys.path.append("./lib_")  
-# import lensTransfer
-import lib_.lensTransfer as lensTransfer
-
-
 import openai
-import lib_.api as api  # 导入新创建的API模块
 from streamlit_elements import elements, mui, html
 
+#import lib_.lensTransfer as lensTransfer
+#import lib_.api as api  
+
+from lib_ import lensTransfer
+from lib_ import api
 
 
 # 设置页面配置
