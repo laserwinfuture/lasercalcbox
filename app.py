@@ -6,8 +6,8 @@ import os
 import openai
 from streamlit_elements import elements, mui, html
 
-import  lib_.lensTransfer 
-import  lib_.api 
+from lib_ import lensTransfer
+from lib_ import api
 
 
 # 设置页面配置
