@@ -10,8 +10,8 @@ from streamlit_elements import elements, mui, html
 current_path = os.path.dirname(os.path.abspath(__file__))
 print(current_path)
 libpath = os.path.join(current_path, 'mylib')
-sys.path.append(current_path)
-print(current_path)
+sys.path.append(libpath)
+print(libpath)
 
 import lensTransfer
 import api
