@@ -6,6 +6,10 @@ import os
 import openai
 from streamlit_elements import elements, mui, html
 
+
+current_path = os.path.dirname(os.path.abspath(__file__))
+print(current_path)
+
 from mylib import lensTransfer
 from mylib import api
 
