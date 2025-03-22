@@ -1,5 +1,8 @@
 # 忽略node_modules目录
 need_M2Fit/
+module_py_exclued/  
+  
+  
   
 # 忽略/dist目录，相对.gitignore文件所在目录
 /dist

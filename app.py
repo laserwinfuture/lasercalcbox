@@ -2,11 +2,16 @@ import math
 import numpy as np
 import streamlit as st
 import sys
-
+import os
 # sys.path.append("./lib_")  
 # import lensTransfer
+import lib_.lensTransfer as lensTransfer
 
-import lib_.lensTransfer
+
+import openai
+import lib_.api as api  # 导入新创建的API模块
+from streamlit_elements import elements, mui, html
+
 
 
 # 设置页面配置
@@ -42,9 +47,101 @@ st.markdown("""
         flex: 1 1 auto !important;
         min-width: 0 !important;
     }
+    .chat-message {
+        padding: 1.5rem; 
+        border-radius: 0.5rem; 
+        margin-bottom: 1rem; 
+        display: flex;
+        flex-direction: row;
+    }
+    .chat-message.user {
+        background-color: #2b313e;
+    }
+    .chat-message.assistant {
+        background-color: #475063;
+    }
+    .chat-message .avatar {
+        width: 20%;
+    }
+    .chat-message .message {
+        width: 80%;
+    }
+    .settings-container {
+        background-color: #1e2130;
+        padding: 1rem;
+        border-radius: 0.5rem;
+        margin-bottom: 1rem;
+    }
+    .settings-title {
+        font-weight: bold;
+        margin-bottom: 0.5rem;
+    }
+    .settings-panel {
+        background-color: #2c3141;
+        padding: 1rem;
+        border-radius: 0.5rem;
+        margin-bottom: 1rem;
+        transition: max-height 0.3s ease-out;
+    }
+    .stButton>button {
+        width: 100%;
+    }
+    .chat-sidebar {
+        padding: 1rem;
+        background-color: #1e2130;
+        border-radius: 0.5rem;
+        min-width: 300px;
+    }
+    .chat-container {
+        max-width: 100%;
+        margin: 0 auto;
+    }
+    .wide-layout {
+        max-width: 1400px !important;
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+        margin: 0 auto !important;
+    }
+    /* LaTeX样式 */
+    .math-content {
+        margin: 1em 0;
+        overflow-x: auto;
+        overflow-y: hidden;
+        padding: 0.5em 0;
+    }
+    .katex { 
+        font-size: 1.1em !important;
+        text-align: left !important;
+    }
+    .katex-display {
+        overflow: auto hidden;
+        padding: 0.2em 0;
+        margin: 0.5em 0;
+    }
     </style>
     """, unsafe_allow_html=True)
 
+
+# 使用streamlit_elements渲染LaTeX公式
+def render_math(content):
+    """渲染带有LaTeX公式的内容"""
+    with elements("latex_renderer"):
+        with mui.Box(sx={"width": "100%"}):
+            html.Div(content, dangerouslySetInnerHTML={"__html": f"""
+            <div class="latex-content">{content}</div>
+            <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+            <script>
+            MathJax = {{
+                tex: {{
+                    inlineMath: [['$', '$'], ['\\\\(', '\\\\)']],
+                    displayMath: [['$$', '$$'], ['\\\\[', '\\\\]']]
+                }},
+                svg: {{
+                    fontCache: 'global'
+                }}
+            }};
+            </script>
+            """})
 
 def update_energy_state(value, unit):
     # 使用session_state中的实际输入值
@@ -67,6 +164,56 @@ def update_power_state(value, unit):
     # 更新能量
     st.session_state.energy = st.session_state.power / st.session_state.PRF
 
+def get_chatgpt_response(prompt, api_key, base_url=None, model="gpt-3.5-turbo", system_role="你是一个专业的激光技术顾问，可以回答用户关于激光技术方面的问题。", temperature=0.7, top_p=1.0, max_tokens=1000, presence_penalty=0, frequency_penalty=0, conversation_history=None):
+    try:
+        if base_url:
+            client = openai.OpenAI(api_key=api_key, base_url=base_url)
+        else:
+            client = openai.OpenAI(api_key=api_key)
+        
+        # 构建消息历史
+        messages = [{"role": "system", "content": system_role}]
+        
+        # 如果有对话历史，添加到消息中
+        if conversation_history:
+            messages.extend(conversation_history)
+        
+        # 添加当前用户提问
+        messages.append({"role": "user", "content": prompt})
+            
+        response = client.chat.completions.create(
+            model=model,
+            messages=messages,
+            temperature=temperature,
+            max_tokens=max_tokens,
+            top_p=top_p,
+            presence_penalty=presence_penalty,
+            frequency_penalty=frequency_penalty
+        )
+    
+        # 获取回复内容
+        content = response.choices[0].message.content
+   
+        # 检查是否包含思维链内容
+        if '/think' in content:
+            think_content = content.split('/think')[1].strip()  # 获取思维链内容
+            answer_content = content.split('/think')[0].strip()  # 获取回答内容
+            return think_content, answer_content  # 返回思维链和回答内容
+        else:
+            return None, content  # 如果没有思维链内容，返回None和回答内容
+    
+    except Exception as e:
+        return f"发生错误: {str(e)}"
+
+def update_role():
+    # 清空聊天记录
+    st.session_state.chat_messages = []
+    # 更新角色定义
+    st.session_state.system_role = st.session_state.role_input
+
+def clear_chat():
+    # 清空聊天记录
+    st.session_state.chat_messages = []
 
 # 初始化session state
 if 'page' not in st.session_state:
@@ -83,24 +230,53 @@ if 'energy' not in st.session_state:
     st.session_state.energy = 1e-3  # 默认1mJ
 if 'power' not in st.session_state:
     st.session_state.power = st.session_state.energy * st.session_state.PRF
+if 'chat_messages' not in st.session_state:
+    st.session_state.chat_messages = []
+if 'openai_api_key' not in st.session_state:
+    st.session_state.openai_api_key = ""
+if 'system_role' not in st.session_state:
+    st.session_state.system_role = "你是一个专业的激光技术顾问，可以回答用户关于激光技术方面的问题。请用标准的语法描述公式：1）行内用$符号进行包裹，2）行间公式用$$ 进行包裹"
+if 'base_url' not in st.session_state:
+    st.session_state.base_url = None
+if 'model' not in st.session_state:
+    st.session_state.model = "gpt-4o-mini"
+if 'temperature' not in st.session_state:
+    st.session_state.temperature = 0.7
+if 'top_p' not in st.session_state:
+    st.session_state.top_p = 1.0
+if 'max_tokens' not in st.session_state:
+    st.session_state.max_tokens = 4000
+if 'presence_penalty' not in st.session_state:
+    st.session_state.presence_penalty = 0.0
+if 'frequency_penalty' not in st.session_state:
+    st.session_state.frequency_penalty = 0.0
+if 'username' not in st.session_state:
+    st.session_state.username = ""
+if 'is_verified' not in st.session_state:
+    st.session_state.is_verified = False
+if 'show_settings' not in st.session_state:
+    st.session_state.show_settings = False
 
 # 创建侧边栏导航
-st.sidebar.subheader('激光计算工具箱V0.1')
-laser_power_button = st.sidebar.button('激光功率计算')
+st.sidebar.subheader('激光计算工具箱V0.2')
+laser_power_button  = st.sidebar.button('激光功率计算')
 beam_quality_button = st.sidebar.button('光束质量计算')
+ai_chat_button      = st.sidebar.button('AI聊天')
 
 # 添加空白占位，将文字推到底部
 st.sidebar.markdown('---')
-for _ in range(20):
+for _ in range(25):
     st.sidebar.write('')
 
 # 在底部添加文字
-st.sidebar.markdown('by Dr.shi  \n 13810392543')
+st.sidebar.markdown('by Dr.shi  \n8582864@QQ.com')
 
 if laser_power_button:
     st.session_state.page = '激光功率计算'
 elif beam_quality_button:
     st.session_state.page = '光束质量计算'
+elif ai_chat_button:
+    st.session_state.page = 'AI聊天'
 
 if st.session_state.page == '激光功率计算':
     st.subheader('基本参数设置')
@@ -262,3 +438,251 @@ elif st.session_state.page == '光束质量计算':
     st.write(f'束腰位置 = {z0_after:.2f} mm')
     st.write(f'发散角 = {theta0_after*1000:.2f} mrad')
     st.write(f'瑞利长度 = {zr_after*0.001:.2f} mm')
+
+elif st.session_state.page == 'AI聊天':
+    # 应用宽布局样式
+    st.markdown('<style>.block-container{max-width: 1400px; padding-left: 1rem; padding-right: 1rem;}</style>', unsafe_allow_html=True)
+    
+    # 注入MathJax脚本以支持LaTeX公式渲染
+    mathjax_script = """
+    <script>
+    // 检查是否已经加载
+    if (typeof window.MathJax === 'undefined') {
+        // 加载MathJax配置
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\\\(', '\\\\)']],
+                displayMath: [['$$', '$$'], ['\\\\[', '\\\\]']],
+                processEscapes: true,
+                processEnvironments: true
+            },
+            svg: {
+                fontCache: 'global'
+            },
+            skipStartupTypeset: false,
+            startup: {
+                pageReady() {
+                    return MathJax.startup.defaultPageReady().then(function () {
+                        console.log('MathJax初始化完成');
+                    });
+                }
+            }
+        };
+        
+        // 动态创建并加载脚本
+        var script = document.createElement('script');
+        script.src = 'https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js';
+        script.async = true;
+        document.head.appendChild(script);
+    } else {
+        // 如果已加载，尝试重新渲染页面中的数学公式
+        if (typeof window.MathJax.typeset === 'function') {
+            setTimeout(function() {
+                window.MathJax.typeset();
+            }, 500);
+        }
+    }
+    </script>
+    """
+    
+    st.markdown(mathjax_script, unsafe_allow_html=True)
+    
+    st.subheader('AI助手')
+    
+    # 用户登录区域
+    if not st.session_state.is_verified:
+        login_col1, login_col2, login_col3 = st.columns([1, 2, 1])
+        with login_col2:
+            st.info("请输入您的用户名以使用AI聊天功能")
+            username = st.text_input("用户名")
+            if st.button("验证用户"):
+                if username:
+                    is_verified, api_key = api.verify_user(username)
+                    if is_verified:
+                        st.session_state.is_verified = True
+                        st.session_state.username = username
+                        st.session_state.openai_api_key = api_key
+                        st.success(f"欢迎, {username}! 验证成功。")
+                        st.rerun()
+                    else:
+                        st.error("未找到该用户，请联系管理员注册。")
+                else:
+                    st.warning("请输入用户名")
+    else:
+        # 聊天界面和设置
+        col1, col2 = st.columns([4, 1])
+        
+        with col2:
+            # 右侧边栏 - 设置面板
+            st.markdown("<div class='chat-sidebar'>", unsafe_allow_html=True)
+            
+            # 显示当前用户
+            st.write(f"当前用户: **{st.session_state.username}**")
+            
+            # 模型选择
+            st.selectbox("选择模型", api.AVAILABLE_MODELS, 
+                        index=api.AVAILABLE_MODELS.index(st.session_state.model) if st.session_state.model in api.AVAILABLE_MODELS else 0,
+                        key="model_select",
+                        on_change=lambda: setattr(st.session_state, 'model', st.session_state.model_select))
+            
+            # API线路选择
+            endpoint_names = list(api.API_ENDPOINTS.keys())
+            selected_endpoint = st.selectbox(
+                "选择API线路", 
+                endpoint_names,
+                index=0,
+                key="endpoint_select"
+            )
+            # 更新baseurl
+            st.session_state.base_url = api.API_ENDPOINTS[selected_endpoint]
+            
+            # 预设角色选择
+            role_names = list(api.PREDEFINED_ROLES.keys())
+            role_names.append("自定义")  # 将"自定义"添加到列表末尾而不是开头
+            selected_role = st.selectbox(
+                "选择角色预设", 
+                role_names,
+                index=0,  # 默认选择第一个预设角色
+                key="role_preset"
+            )
+            
+            
+            # 根据选择展示角色定义
+            if selected_role == "自定义":
+                custom_role = st.text_area(
+                    "自定义角色定义", 
+                    value=st.session_state.system_role,
+                    key="custom_role_input"
+                )
+                if st.button("应用自定义角色"):
+                    st.session_state.system_role = custom_role
+                    st.success("已应用自定义角色")
+            else:
+                # 应用预设角色
+                if st.button(f"应用'{selected_role}'角色"):
+                    st.session_state.system_role = api.PREDEFINED_ROLES[selected_role]
+                    st.success(f"已应用'{selected_role}'角色预设")
+            
+            # 高级设置(可折叠)
+            with st.expander("高级设置"):
+                st.slider("随机性", 0.0, 2.0, st.session_state.temperature, 0.1, 
+                         key="temp_slider", 
+                         on_change=lambda: setattr(st.session_state, 'temperature', st.session_state.temp_slider))
+                
+                st.slider("核采样", 0.1, 1.0, st.session_state.top_p, 0.1,
+                         key="top_p_slider",
+                         on_change=lambda: setattr(st.session_state, 'top_p', st.session_state.top_p_slider))
+                
+                st.number_input("回复长度限制", 100, 4000, st.session_state.max_tokens, 100,
+                              key="max_tokens_input",
+                              on_change=lambda: setattr(st.session_state, 'max_tokens', st.session_state.max_tokens_input))
+                
+                st.slider("话题新鲜度", -2.0, 2.0, st.session_state.presence_penalty, 0.1,
+                         key="presence_slider",
+                         on_change=lambda: setattr(st.session_state, 'presence_penalty', st.session_state.presence_slider))
+                
+                st.slider("频率惩罚度", -2.0, 2.0, st.session_state.frequency_penalty, 0.1,
+                         key="freq_slider",
+                         on_change=lambda: setattr(st.session_state, 'frequency_penalty', st.session_state.freq_slider))
+            
+            # 清空聊天按钮
+            if st.button("清空聊天记录"):
+                clear_chat()
+                st.success("聊天记录已清空")
+            
+            # 退出登录按钮
+            if st.button("退出登录"):
+                st.session_state.is_verified = False
+                st.session_state.username = ""
+                st.rerun()
+                
+            st.markdown("</div>", unsafe_allow_html=True)
+            
+        with col1:
+            # 左侧 - 聊天区域
+            # 增加容器样式，使聊天区域更宽
+            st.markdown("<div style='max-width: 100%;'>", unsafe_allow_html=True)
+            
+            # 处理LaTeX公式
+            def process_markdown_with_latex(text):
+                """将文本中的LaTeX公式标记为HTML以便MathJax处理"""
+                # 创建HTML内容，注意添加了触发MathJax重新处理的脚本
+                html_content = f"""
+                <div class="math-content">
+                    {text}
+                </div>
+                <script>
+                    if (typeof window.MathJax !== 'undefined' && typeof window.MathJax.typeset === 'function') {{
+                        try {{
+                            window.MathJax.typeset();
+                        }} catch (e) {{
+                            console.error("MathJax渲染错误:", e);
+                        }}
+                    }}
+                </script>
+                """
+                return html_content
+            
+            # 显示聊天历史
+            for message in st.session_state.chat_messages:
+                with st.chat_message(message["role"]):
+                    # 如果不包含数学公式，直接使用markdown
+                    if '$' not in message["content"] and '\\(' not in message["content"]:
+                        st.markdown(message["content"])
+                    else:
+                        # 对含有数学公式的内容使用特殊处理
+                        processed_content = process_markdown_with_latex(message["content"])
+                        st.markdown(processed_content, unsafe_allow_html=True)
+            
+            # 用户输入
+            user_input = st.chat_input("请输入您的问题")
+            if user_input:
+                # 添加用户消息到历史记录
+                st.session_state.chat_messages.append({"role": "user", "content": user_input})
+                with st.chat_message("user"):
+                    # 如果不包含数学公式，直接使用markdown
+                    if '$' not in user_input and '\\(' not in user_input:
+                        st.markdown(user_input)
+                    else:
+                        # 对含有数学公式的内容使用特殊处理
+                        processed_input = process_markdown_with_latex(user_input)
+                        st.markdown(processed_input, unsafe_allow_html=True)
+                
+                # 准备对话历史记录
+                conversation_history = []
+                for msg in st.session_state.chat_messages[:-1]:  # 不包括最新的用户消息
+                    conversation_history.append({"role": msg["role"], "content": msg["content"]})
+                
+                # 获取AI回复
+                with st.spinner("AI思考中..."):
+                    think_response, ai_response = get_chatgpt_response(
+                        prompt=user_input, 
+                        api_key=st.session_state.openai_api_key,
+                        base_url=st.session_state.base_url,
+                        model=st.session_state.model,
+                        system_role=st.session_state.system_role,
+                        temperature=st.session_state.temperature,
+                        top_p=st.session_state.top_p,
+                        max_tokens=st.session_state.max_tokens,
+                        presence_penalty=st.session_state.presence_penalty,
+                        frequency_penalty=st.session_state.frequency_penalty,
+                        conversation_history=conversation_history
+                    )
+                
+                # 添加AI消息到历史记录
+                st.session_state.chat_messages.append({"role": "assistant", "content": ai_response})
+                with st.chat_message("assistant"):
+                    # 如果有思维链内容，先展示思维链内容
+                    if think_response:
+                        st.markdown(f"**思维链内容:** {think_response}")
+
+                    # 展示AI的回答内容
+                    # 如果不包含数学公式，直接使用markdown
+                    if '$' not in ai_response and '\\(' not in ai_response:
+                        st.markdown(ai_response)
+                    else:
+                        # 对含有数学公式的内容使用特殊处理
+                        processed_response = process_markdown_with_latex(ai_response)
+                        st.markdown(processed_response, unsafe_allow_html=True)
+                    
+            st.markdown("</div>", unsafe_allow_html=True)
