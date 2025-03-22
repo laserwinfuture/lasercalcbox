@@ -13,7 +13,6 @@ import api
 # 设置页面配置
 st.set_page_config(
     page_title='Laser Calc Box',
-    page_icon='logo/ICO.ico',
     layout='centered'
 )
 
