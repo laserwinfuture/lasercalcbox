@@ -3,11 +3,7 @@ import numpy as np
 import streamlit as st
 import sys
 
-# sys.path.append("./lib_")  
-# import lensTransfer
-
-import mylib.lensTransfer as lensTransfer
-
+from mylib.lensTransfer import solve
 
 # 设置页面配置
 st.set_page_config(
@@ -252,7 +248,7 @@ elif st.session_state.page == '光束质量计算':
     
     # 计算透镜变换后的参数
     wavelength_mm = wavelength * 1e-6  # 转换为mm
-    M2_after, d0_after, theta0_after, z0_after, zr_after = lensTransfer.solve(
+    M2_after, d0_after, theta0_after, z0_after, zr_after = solve(
         M2, waist_diameter, distance_to_lens, ZR, wavelength_mm, focal_length
     )
     
