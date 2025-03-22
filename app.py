@@ -9,8 +9,15 @@ from streamlit_elements import elements, mui, html
 #import lib_.lensTransfer as lensTransfer
 #import lib_.api as api  
 
-from lib_ import lensTransfer
-from lib_ import api
+#from lib_ import lensTransfer
+#from lib_ import api
+
+current_path = os.path.abspath(os.path.dirname(__file__))
+lib_path = os.path.join(current_path, 'lib_')
+sys.path.append(lib_path)
+
+import lensTransfer
+import api
 
 
 # 设置页面配置
