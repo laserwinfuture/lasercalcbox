@@ -5,10 +5,7 @@ import sys
 import os
 import openai
 from streamlit_elements import elements, mui, html
-# import lib_.lensTransfer as lensTransfer
-# import lib_.api as api  
-# from lib_ import lensTransfer
-# from lib_ import api
+
 current_path = os.path.abspath(os.path.dirname(__file__))
 print(current_path)
 lib_path = os.path.join(current_path, 'lib_')
