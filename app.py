@@ -6,13 +6,9 @@ import os
 import openai
 from streamlit_elements import elements, mui, html
 
-current_path = os.path.abspath(os.path.dirname(__file__))
-print(current_path)
-lib_path = os.path.join(current_path, 'lib_')
-sys.path.append(lib_path)
+sys.path.append(os.path.abspath('./lib_'))
 import lensTransfer
 import api
-
 
 # 设置页面配置
 st.set_page_config(
