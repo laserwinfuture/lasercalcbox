@@ -1,6 +1,7 @@
 # 忽略node_modules目录
 need_M2Fit/
 module_py_exclued/  
+lib_
   
   
   
