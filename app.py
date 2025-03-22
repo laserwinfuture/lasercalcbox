@@ -2,6 +2,17 @@ import math
 import numpy as np
 import streamlit as st
 import sys
+import platform
+
+# 获取操作系统名称和版本
+os_name = platform.system()      # 获取操作系统名称
+os_version = platform.version()  # 获取操作系统版本
+
+# 打印操作系统信息
+print(f"操作系统: {os_name}")
+print(f"版本: {os_version}")
+
+
 
 import mylib.lensTransfer as lensTransfer
 
@@ -82,7 +93,7 @@ if 'power' not in st.session_state:
     st.session_state.power = st.session_state.energy * st.session_state.PRF
 
 # 创建侧边栏导航
-st.sidebar.subheader('激光计算工具箱V0.1')
+st.sidebar.subheader('激光计算工具箱V0.11')
 laser_power_button = st.sidebar.button('激光功率计算')
 beam_quality_button = st.sidebar.button('光束质量计算')
 
