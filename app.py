@@ -8,8 +8,8 @@ import os
 # import mylib.lensTransfer as lensTransfer
 
 # pyd/so (__init__.py)
-from mylib import lensTransfer
-
+import lensTransfer
+import api
 
 
 # 设置页面配置
