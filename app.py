@@ -2,10 +2,17 @@ import math
 import numpy as np
 import streamlit as st
 import sys
+import os
 
+# py
+# import mylib.lensTransfer as lensTransfer
 
+#pyd/so
+current_path = os.path.abspath(os.path.dirname(__file__))
+lib_path = os.path.join(current_path, 'mylib')
+sys.path.append(lib_path)
+import lensTransfer
 
-import mylib.lensTransfer as lensTransfer
 
 
 # 设置页面配置
