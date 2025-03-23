@@ -8,9 +8,6 @@ import os
 # import mylib.lensTransfer as lensTransfer
 
 #pyd/so
-current_path = os.path.abspath(os.path.dirname(__file__))
-lib_path = os.path.join(current_path, 'mylib')
-sys.path.append(lib_path)
 import lensTransfer
 
 
