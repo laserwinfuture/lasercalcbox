@@ -2,15 +2,6 @@ import math
 import numpy as np
 import streamlit as st
 import sys
-import platform
-
-# 获取操作系统名称和版本
-os_name = platform.system()      # 获取操作系统名称
-os_version = platform.version()  # 获取操作系统版本
-
-# 打印操作系统信息
-print(f"操作系统: {os_name}")
-print(f"版本: {os_version}")
 
 
 
