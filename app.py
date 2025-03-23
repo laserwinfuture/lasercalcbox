@@ -6,7 +6,9 @@ import os
 
 # py
 from mylib import lensTransfer
+from mylib import api
 
+print('***** API load pass! *****')
 
 # 设置页面配置
 st.set_page_config(
