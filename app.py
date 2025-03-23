@@ -7,8 +7,8 @@ import os
 # py
 # import mylib.lensTransfer as lensTransfer
 
-#pyd/so
-import lensTransfer
+# pyd/so (__init__.py)
+from mylib import lensTransfer
 
 
 
