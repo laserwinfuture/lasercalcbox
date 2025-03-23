@@ -5,11 +5,7 @@ import sys
 import os
 
 # py
-# import mylib.lensTransfer as lensTransfer
-
-# pyd/so (__init__.py)
-import lensTransfer
-import api
+from mylib import lensTransfer
 
 
 # 设置页面配置
