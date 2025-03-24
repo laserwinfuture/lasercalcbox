@@ -108,7 +108,7 @@ if st.session_state.page == '激光功率计算':
     # PRF设置
     col_prf1, col_prf2 = st.columns([3, 1])
     with col_prf1:
-        prf_value = st.number_input('重复频率', value=1.0, format='%f')
+        prf_value = st.number_input('重复频率', value=1.0,  step=1.0, format='%f')
     with col_prf2:
         prf_unit = st.selectbox('脉冲频率单位', ['Hz', 'kHz', 'MHz'], index=1, label_visibility='hidden')
     
@@ -135,10 +135,10 @@ if st.session_state.page == '激光功率计算':
         st.session_state.PW = pw_value * 1e-6
         
     # 光斑直径设置
-    st.session_state.diameter = st.number_input('光斑直径(mm)', value=1.0) * 0.1  # 转换为cm
+    st.session_state.diameter = st.number_input('光斑直径(mm)', value=1.0, step= 0.1) * 0.1  # 转换为cm
     
     # 损伤阈值设置
-    st.session_state.damage = st.number_input('损伤阈值(J/cm²@10ns)', value=5.0)
+    st.session_state.damage = st.number_input('损伤阈值(J/cm²@10ns)', value=5.0, step=1.0)
     
     st.subheader('能量/功率(任输其一)')
     
@@ -230,10 +230,10 @@ if st.session_state.page == '激光功率计算':
 elif st.session_state.page == '光束质量计算':
     st.subheader('光束质量计算')
     # 基本参数输入
-    wavelength = st.number_input('波长(nm)', value=1064)
-    waist_diameter = st.number_input('束腰直径(mm)', value=1.0)
-    divergence = st.number_input('发散角(mrad)', value=1.36)
-    location = st.number_input('传输距离(mm)', value=100.0)
+    wavelength = st.number_input('波长(nm)', value=1064, step=100)
+    waist_diameter = st.number_input('束腰直径(mm)', value=1.0, step=0.1)
+    divergence = st.number_input('发散角(mrad)', value=1.36, step=0.1)
+    location = st.number_input('传输距离(mm)', value=100.0, step=100.0)
     
     # M2计算
     M2 = math.pi * waist_diameter * divergence / (4 * wavelength * 1e-3)
@@ -247,8 +247,8 @@ elif st.session_state.page == '光束质量计算':
 
     # 透镜变换计算
     st.subheader('透镜聚焦')
-    distance_to_lens = st.number_input('束腰到透镜距离(mm)', value=100.0)
-    focal_length = st.number_input('透镜焦距(mm)', value=100.0)
+    distance_to_lens = st.number_input('束腰到透镜距离(mm)', value=100.0, step=100.0)
+    focal_length = st.number_input('透镜焦距(mm)', value=100.0, step=100.0)
     
     # 计算透镜变换后的参数
     wavelength_mm = wavelength * 1e-6  # 转换为mm
