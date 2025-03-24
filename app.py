@@ -1,12 +1,13 @@
-import math
-import numpy as np
-import streamlit as st
 import sys
 import os
+import math
+import numpy     as np
+import streamlit as st
+
 
 # py
 from mylib import lensTransfer
-print('***** mylib load pass! *****')
+
 
 # 设置页面配置
 st.set_page_config(
@@ -84,7 +85,7 @@ if 'power' not in st.session_state:
     st.session_state.power = st.session_state.energy * st.session_state.PRF
 
 # 创建侧边栏导航
-st.sidebar.subheader('激光计算工具箱V0.11')
+st.sidebar.subheader('激光计算工具箱V0.1.1')
 laser_power_button = st.sidebar.button('激光功率计算')
 beam_quality_button = st.sidebar.button('光束质量计算')
 
@@ -94,7 +95,7 @@ for _ in range(20):
     st.sidebar.write('')
 
 # 在底部添加文字
-st.sidebar.markdown('by Dr.shi  \n 13810392543')
+st.sidebar.markdown('by Dr.shi  \n8582864@qq.com')
 
 if laser_power_button:
     st.session_state.page = '激光功率计算'
@@ -109,7 +110,7 @@ if st.session_state.page == '激光功率计算':
     with col_prf1:
         prf_value = st.number_input('重复频率', value=1.0, format='%f')
     with col_prf2:
-        prf_unit = st.selectbox('', ['Hz', 'kHz', 'MHz'], index=1)
+        prf_unit = st.selectbox('脉冲频率单位', ['Hz', 'kHz', 'MHz'], index=1, label_visibility='hidden')
     
     if prf_unit == 'Hz':
         st.session_state.PRF = prf_value
@@ -124,7 +125,7 @@ if st.session_state.page == '激光功率计算':
     with col_pw1:
         pw_value = st.number_input('脉冲宽度', value=1.0, step=1.0, format='%f')
     with col_pw2:
-        pw_unit = st.selectbox(' ', ['ps', 'ns', 'us'], index=1)
+        pw_unit = st.selectbox('脉冲宽度单位', ['ps', 'ns', 'us'], index=1, label_visibility='hidden')
     
     if pw_unit == 'ps':
         st.session_state.PW = pw_value * 1e-12
@@ -144,7 +145,7 @@ if st.session_state.page == '激光功率计算':
     # 能量设置
     col_e1, col_e2 = st.columns([3, 1])
     with col_e2:
-        energy_unit = st.selectbox('  ', ['nJ', 'μJ', 'mJ'], index=2)
+        energy_unit = st.selectbox('脉冲能量单位', ['nJ', 'μJ', 'mJ'], index=2, label_visibility='hidden')
     with col_e1:
         # 根据当前能量和单位计算显示值
         if energy_unit == 'nJ':
@@ -166,7 +167,7 @@ if st.session_state.page == '激光功率计算':
     # 功率显示
     col_p1, col_p2 = st.columns([3, 1])
     with col_p2:
-        power_unit = st.selectbox('   ', ['W', 'mW'], index=0)
+        power_unit = st.selectbox('功率单位', ['W', 'mW'], index=0, label_visibility='hidden')
     with col_p1:
         # 根据单位显示功率值
         display_power = st.session_state.power * (1000 if power_unit == 'mW' else 1)
