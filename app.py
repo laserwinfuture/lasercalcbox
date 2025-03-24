@@ -18,6 +18,9 @@ API_ENDPOINTS    = ast.literal_eval(st.secrets["API_ENDPOINTS"])
 AVAILABLE_MODELS = ast.literal_eval(st.secrets["AVAILABLE_MODELS"])
 PREDEFINED_ROLES = ast.literal_eval(st.secrets["PREDEFINED_ROLES"])
 
+
+APP_TITTLE = '激光计算工具箱V0.2'
+
 # 验证用户并获取API密钥
 def verify_user(username):
     """
@@ -280,7 +283,7 @@ if 'show_settings' not in st.session_state:
     st.session_state.show_settings = False
 
 # 创建侧边栏导航
-st.sidebar.subheader('激光计算工具箱V0.2')
+st.sidebar.subheader(f'{APP_TITTLE}')
 laser_power_button  = st.sidebar.button('激光功率计算')
 beam_quality_button = st.sidebar.button('光束质量计算')
 ai_chat_button      = st.sidebar.button('AI激光顾问')
@@ -291,7 +294,7 @@ for _ in range(25):
     st.sidebar.write('')
 
 # 在底部添加文字
-st.sidebar.markdown('by Dr.shi  \n8582864@QQ.com')
+st.sidebar.markdown('by Dr.shi  \n8582864@qq.com')
 
 if laser_power_button:
     st.session_state.page = '激光功率计算'
@@ -515,7 +518,7 @@ elif st.session_state.page == 'AI激光顾问':
     if not st.session_state.is_verified:
         login_col1, login_col2, login_col3 = st.columns([1, 2, 1])
         with login_col2:
-            st.info("请输入您的用户名以使用AI聊天功能")
+            st.info("请输入您的用户名以使用AI聊天功能(可以输入test777,进行测试)")
             username = st.text_input("用户名")
             if st.button("验证用户"):
                 if username:
