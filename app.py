@@ -6,6 +6,9 @@ import os
 import ast
 import openai
 from streamlit_elements import elements, mui, html
+import base64
+import datetime
+import io
 
 # mylib
 from mylib import lensTransfer
@@ -19,7 +22,7 @@ AVAILABLE_MODELS = ast.literal_eval(st.secrets["AVAILABLE_MODELS"])
 PREDEFINED_ROLES = ast.literal_eval(st.secrets["PREDEFINED_ROLES"])
 
 
-APP_TITTLE = '激光计算工具箱V0.2'
+APP_TITTLE = '激光计算工具箱V0.3'
 
 # 验证用户并获取API密钥
 def verify_user(username):
@@ -218,6 +221,15 @@ def get_chatgpt_response(prompt, api_key, base_url=None, model="gpt-3.5-turbo", 
     
         # 获取回复内容
         content = response.choices[0].message.content
+        
+        # 更新token计数
+        if 'total_tokens' not in st.session_state:
+            st.session_state.total_tokens = 0
+        
+        # 如果响应对象中包含usage信息，添加到累计值
+        if hasattr(response, 'usage') and response.usage is not None:
+            if hasattr(response.usage, 'total_tokens'):
+                st.session_state.total_tokens += response.usage.total_tokens
    
         # 检查是否包含思维链内容
         if '/think' in content:
@@ -239,6 +251,24 @@ def update_role():
 def clear_chat():
     # 清空聊天记录
     st.session_state.chat_messages = []
+
+def get_markdown_download_link(markdown_content, filename="聊天记录.md"):
+    """生成Markdown下载链接"""
+    b64 = base64.b64encode(markdown_content.encode()).decode()
+    href = f'<a href="data:file/markdown;base64,{b64}" download="{filename}">下载 Markdown 文件</a>'
+    return href
+
+def format_chat_to_markdown(chat_messages):
+    """将聊天记录格式化为Markdown"""
+    current_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    markdown = f"# 激光计算工具箱聊天记录\n\n导出时间: {current_time}\n\n"
+    
+    for message in chat_messages:
+        role = "用户" if message["role"] == "user" else "AI助手"
+        content = message["content"]
+        markdown += f"## {role}\n\n{content}\n\n"
+    
+    return markdown
 
 # 初始化session state
 if 'page' not in st.session_state:
@@ -281,6 +311,10 @@ if 'is_verified' not in st.session_state:
     st.session_state.is_verified = False
 if 'show_settings' not in st.session_state:
     st.session_state.show_settings = False
+if 'export_format' not in st.session_state:
+    st.session_state.export_format = 'markdown'
+if 'total_tokens' not in st.session_state:
+    st.session_state.total_tokens = 0
 
 # 创建侧边栏导航
 st.sidebar.subheader(f'{APP_TITTLE}')
@@ -297,9 +331,9 @@ for _ in range(25):
 st.sidebar.markdown('by Dr.shi  \n8582864@qq.com')
 
 if laser_power_button:
-    st.session_state.page = '激光功率计算'
+    st.session_state.page = '功率能量等换算'
 elif beam_quality_button:
-    st.session_state.page = '光束质量计算'
+    st.session_state.page = 'M2及高斯光束传输聚焦'
 elif ai_chat_button:
     st.session_state.page = 'AI激光顾问'
 
@@ -522,7 +556,7 @@ elif st.session_state.page == 'AI激光顾问':
             username = st.text_input("用户名")
             if st.button("验证用户"):
                 if username:
-                    is_verified, api_key =  verify_user(username)
+                    is_verified, api_key = verify_user(username)
                     if is_verified:
                         st.session_state.is_verified = True
                         st.session_state.username = username
@@ -534,120 +568,40 @@ elif st.session_state.page == 'AI激光顾问':
                 else:
                     st.warning("请输入用户名")
     else:
-        # 聊天界面和设置
-        col1, col2 = st.columns([4, 1])
-        
-        with col2:
-            # 右侧边栏 - 设置面板
-            st.markdown("<div class='chat-sidebar'>", unsafe_allow_html=True)
-            
-            # 显示当前用户
-            st.write(f"当前用户: **{st.session_state.username}**")
-            
-            # 模型选择
-            st.selectbox("选择模型",  AVAILABLE_MODELS, 
-                        index= AVAILABLE_MODELS.index(st.session_state.model) if st.session_state.model in  AVAILABLE_MODELS else 0,
-                        key="model_select",
-                        on_change=lambda: setattr(st.session_state, 'model', st.session_state.model_select))
-            
-            # API线路选择
-            endpoint_names = list( API_ENDPOINTS.keys())
-            selected_endpoint = st.selectbox(
-                "选择API线路", 
-                endpoint_names,
-                index=0,
-                key="endpoint_select"
-            )
-            # 更新baseurl
-            st.session_state.base_url =  API_ENDPOINTS[selected_endpoint]
-            
-            # 预设角色选择
-            role_names = list( PREDEFINED_ROLES.keys())
-            role_names.append("自定义")  # 将"自定义"添加到列表末尾而不是开头
-            selected_role = st.selectbox(
-                "选择角色预设", 
-                role_names,
-                index=0,  # 默认选择第一个预设角色
-                key="role_preset"
-            )
-            
-            
-            # 根据选择展示角色定义
-            if selected_role == "自定义":
-                custom_role = st.text_area(
-                    "自定义角色定义", 
-                    value=st.session_state.system_role,
-                    key="custom_role_input"
-                )
-                if st.button("应用自定义角色"):
-                    st.session_state.system_role = custom_role
-                    st.success("已应用自定义角色")
-            else:
-                # 应用预设角色
-                if st.button(f"应用'{selected_role}'角色"):
-                    st.session_state.system_role =  PREDEFINED_ROLES[selected_role]
-                    st.success(f"已应用'{selected_role}'角色预设")
-            
-            # 高级设置(可折叠)
-            with st.expander("高级设置"):
-                st.slider("随机性", 0.0, 2.0, st.session_state.temperature, 0.1, 
-                         key="temp_slider", 
-                         on_change=lambda: setattr(st.session_state, 'temperature', st.session_state.temp_slider))
-                
-                st.slider("核采样", 0.1, 1.0, st.session_state.top_p, 0.1,
-                         key="top_p_slider",
-                         on_change=lambda: setattr(st.session_state, 'top_p', st.session_state.top_p_slider))
-                
-                st.number_input("回复长度限制", 100, 4000, st.session_state.max_tokens, 100,
-                              key="max_tokens_input",
-                              on_change=lambda: setattr(st.session_state, 'max_tokens', st.session_state.max_tokens_input))
-                
-                st.slider("话题新鲜度", -2.0, 2.0, st.session_state.presence_penalty, 0.1,
-                         key="presence_slider",
-                         on_change=lambda: setattr(st.session_state, 'presence_penalty', st.session_state.presence_slider))
-                
-                st.slider("频率惩罚度", -2.0, 2.0, st.session_state.frequency_penalty, 0.1,
-                         key="freq_slider",
-                         on_change=lambda: setattr(st.session_state, 'frequency_penalty', st.session_state.freq_slider))
-            
-            # 清空聊天按钮
-            if st.button("清空聊天记录"):
-                clear_chat()
-                st.success("聊天记录已清空")
-            
-            # 退出登录按钮
-            if st.button("退出登录"):
-                st.session_state.is_verified = False
-                st.session_state.username = ""
-                st.rerun()
-                
-            st.markdown("</div>", unsafe_allow_html=True)
-            
-        with col1:
-            # 左侧 - 聊天区域
-            # 增加容器样式，使聊天区域更宽
-            st.markdown("<div style='max-width: 100%;'>", unsafe_allow_html=True)
-            
-            # 处理LaTeX公式
-            def process_markdown_with_latex(text):
-                """将文本中的LaTeX公式标记为HTML以便MathJax处理"""
-                # 创建HTML内容，注意添加了触发MathJax重新处理的脚本
-                html_content = f"""
-                <div class="math-content">
-                    {text}
-                </div>
-                <script>
-                    if (typeof window.MathJax !== 'undefined' && typeof window.MathJax.typeset === 'function') {{
-                        try {{
-                            window.MathJax.typeset();
-                        }} catch (e) {{
-                            console.error("MathJax渲染错误:", e);
-                        }}
+        # 处理LaTeX公式的函数
+        def process_markdown_with_latex(text):
+            """将文本中的LaTeX公式标记为HTML以便MathJax处理"""
+            # 创建HTML内容，注意添加了触发MathJax重新处理的脚本
+            html_content = f"""
+            <div class="math-content">
+                {text}
+            </div>
+            <script>
+                if (typeof window.MathJax !== 'undefined' && typeof window.MathJax.typeset === 'function') {{
+                    try {{
+                        window.MathJax.typeset();
+                    }} catch (e) {{
+                        console.error("MathJax渲染错误:", e);
                     }}
-                </script>
-                """
-                return html_content
+                }}
+            </script>
+            """
+            return html_content
             
+        # 显示用户信息和token统计
+        user_col1, user_col2 = st.columns([3, 2])
+        with user_col1:
+            st.write(f"当前用户: **{st.session_state.username}**")
+        with user_col2:
+            token_count = st.session_state.total_tokens
+            st.write(f"当前会话Token统计: **{token_count:,}**")
+        
+        # 创建聊天和设置的选项卡
+        chat_tab, settings_tab = st.tabs(["聊天", "设置"])
+        
+        # 聊天界面选项卡
+        with chat_tab:
+            # 聊天区域 - 占据主要空间
             # 显示聊天历史
             for message in st.session_state.chat_messages:
                 with st.chat_message(message["role"]):
@@ -709,5 +663,117 @@ elif st.session_state.page == 'AI激光顾问':
                         # 对含有数学公式的内容使用特殊处理
                         processed_response = process_markdown_with_latex(ai_response)
                         st.markdown(processed_response, unsafe_allow_html=True)
-                    
-            st.markdown("</div>", unsafe_allow_html=True)
+        
+        # 设置选项卡
+        with settings_tab:
+            # 基本设置部分
+            st.subheader("模型设置")
+            
+            # 设置面板区域1 - 模型和API
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                # 模型选择
+                st.selectbox("选择模型", AVAILABLE_MODELS, 
+                           index=AVAILABLE_MODELS.index(st.session_state.model) if st.session_state.model in AVAILABLE_MODELS else 0,
+                           key="model_select",
+                           on_change=lambda: setattr(st.session_state, 'model', st.session_state.model_select))
+            
+            with col2:
+                # API线路选择
+                endpoint_names = list(API_ENDPOINTS.keys())
+                selected_endpoint = st.selectbox(
+                    "选择API线路", 
+                    endpoint_names,
+                    index=0,
+                    key="endpoint_select"
+                )
+                # 更新baseurl
+                st.session_state.base_url = API_ENDPOINTS[selected_endpoint]
+            
+            # 设置面板区域2 - 角色预设
+            st.subheader("角色设置")
+            
+            # 预设角色选择
+            role_names = list(PREDEFINED_ROLES.keys())
+            role_names.append("自定义")  # 将"自定义"添加到列表末尾而不是开头
+            selected_role = st.selectbox(
+                "选择角色预设", 
+                role_names,
+                index=0,  # 默认选择第一个预设角色
+                key="role_preset"
+            )
+            
+            # 根据选择展示角色定义
+            if selected_role == "自定义":
+                custom_role = st.text_area(
+                    "自定义角色定义", 
+                    value=st.session_state.system_role,
+                    key="custom_role_input"
+                )
+                if st.button("应用自定义角色"):
+                    st.session_state.system_role = custom_role
+                    st.success("已应用自定义角色")
+            else:
+                # 应用预设角色
+                if st.button(f"应用'{selected_role}'角色"):
+                    st.session_state.system_role = PREDEFINED_ROLES[selected_role]
+                    st.success(f"已应用'{selected_role}'角色预设")
+            
+            # 设置面板区域3 - 高级设置
+            st.subheader("高级设置")
+            adv_col1, adv_col2, adv_col3, adv_col4, adv_col5 = st.columns(5)
+            
+            with adv_col1:
+                st.slider("随机性", 0.0, 2.0, st.session_state.temperature, 0.1, 
+                        key="temp_slider", 
+                        on_change=lambda: setattr(st.session_state, 'temperature', st.session_state.temp_slider))
+                
+            with adv_col2:
+                st.slider("核采样", 0.1, 1.0, st.session_state.top_p, 0.1,
+                        key="top_p_slider",
+                        on_change=lambda: setattr(st.session_state, 'top_p', st.session_state.top_p_slider))    
+
+            with adv_col3:
+                st.slider("话题新鲜度", -2.0, 2.0, st.session_state.presence_penalty, 0.1,
+                        key="presence_slider",
+                        on_change=lambda: setattr(st.session_state, 'presence_penalty', st.session_state.presence_slider))
+            
+            with adv_col4:
+                st.slider("频率惩罚度", -2.0, 2.0, st.session_state.frequency_penalty, 0.1,
+                        key="freq_slider",
+                        on_change=lambda: setattr(st.session_state, 'frequency_penalty', st.session_state.freq_slider))
+
+            with adv_col5:
+                st.number_input("回复长度限制", 100, 4000, st.session_state.max_tokens, 100,
+                            key="max_tokens_input",
+                            on_change=lambda: setattr(st.session_state, 'max_tokens', st.session_state.max_tokens_input))
+                
+    
+            # 设置面板区域4 - 工具按钮
+            st.subheader("聊天工具")
+            tool_col1, tool_col2, tool_col3 = st.columns(3)
+            
+            with tool_col1:
+                # 导出聊天记录
+                if st.button("导出聊天记录", use_container_width=True) and st.session_state.chat_messages:
+                    # 生成文件名
+                    current_time = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+                    # 导出为Markdown
+                    markdown_content = format_chat_to_markdown(st.session_state.chat_messages)
+                    filename = f"聊天记录_{current_time}.md"
+                    download_link = get_markdown_download_link(markdown_content, filename)
+                    st.markdown(download_link, unsafe_allow_html=True)
+            
+            with tool_col2:
+                # 清空聊天按钮
+                if st.button("清空聊天记录", use_container_width=True):
+                    clear_chat()
+                    st.success("聊天记录已清空")
+            
+            with tool_col3:
+                # 退出登录按钮
+                if st.button("退出登录", use_container_width=True):
+                    st.session_state.is_verified = False
+                    st.session_state.username = ""
+                    st.rerun()
