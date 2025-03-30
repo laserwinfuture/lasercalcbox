@@ -272,7 +272,7 @@ def format_chat_to_markdown(chat_messages):
 
 # 初始化session state
 if 'page' not in st.session_state:
-    st.session_state.page = '激光功率计算'  # 默认页面
+    st.session_state.page = '激光功率/能量/能量密度等换算'  # 默认页面
 if 'PRF' not in st.session_state:
     st.session_state.PRF = 1000  # 默认1kHz
 if 'PW' not in st.session_state:
@@ -318,8 +318,8 @@ if 'total_tokens' not in st.session_state:
 
 # 创建侧边栏导航
 st.sidebar.subheader(f'{APP_TITTLE}')
-laser_power_button  = st.sidebar.button('激光功率计算')
-beam_quality_button = st.sidebar.button('光束质量计算')
+laser_power_button  = st.sidebar.button('激光功率/能量/能量密度等换算')
+beam_quality_button = st.sidebar.button('M2及高斯光束传输与聚焦')
 ai_chat_button      = st.sidebar.button('AI激光顾问')
 
 # 添加空白占位，将文字推到底部
@@ -331,13 +331,13 @@ for _ in range(25):
 st.sidebar.markdown('by Dr.shi  \n8582864@qq.com')
 
 if laser_power_button:
-    st.session_state.page = '功率能量等换算'
+    st.session_state.page = '激光功率/能量/能量密度等换算'
 elif beam_quality_button:
-    st.session_state.page = 'M2及高斯光束传输聚焦'
+    st.session_state.page = 'M2及高斯光束传输与聚焦'
 elif ai_chat_button:
     st.session_state.page = 'AI激光顾问'
 
-if st.session_state.page == '激光功率计算':
+if st.session_state.page == '激光功率/能量/能量密度等换算':
     st.subheader('基本参数设置')
     
     # PRF设置
@@ -462,8 +462,8 @@ if st.session_state.page == '激光功率计算':
     else:
         st.error(f'能量密度超过损伤阈值 ({energy_density/damage_threshold*100:.1f}% 损伤阈值)')
 
-elif st.session_state.page == '光束质量计算':
-    st.subheader('光束质量计算')
+elif st.session_state.page == 'M2及高斯光束传输与聚焦':
+    st.subheader('M2及高斯光束传输')
     # 基本参数输入
     wavelength = st.number_input('波长(nm)', value=1064)
     waist_diameter = st.number_input('束腰直径(mm)', value=1.0)
