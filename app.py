@@ -294,7 +294,9 @@ if 'system_role' not in st.session_state:
 if 'base_url' not in st.session_state:
     st.session_state.base_url = None
 if 'model' not in st.session_state:
-    st.session_state.model = "gpt-4o-mini"
+    #st.session_state.model = "gpt-4o-mini"
+    # 默认模型：chatgpt-4o-latest
+    st.session_state.model = "chatgpt-4o-latest"
 if 'temperature' not in st.session_state:
     st.session_state.temperature = 0.7
 if 'top_p' not in st.session_state:
